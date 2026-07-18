@@ -6,7 +6,10 @@ type HeroProps = {
 };
 
 export function Hero({ stats, logos }: HeroProps) {
-  const logoRows = logos.length ? [...logos, ...logos] : [];
+  // Keep the animated wall visually rich without asking mobile browsers to
+  // create hundreds of repeated image nodes.
+  const featuredLogos = logos.slice(0, 24);
+  const logoRows = featuredLogos.length ? [...featuredLogos, ...featuredLogos] : [];
 
   return (
     <section className="hero">

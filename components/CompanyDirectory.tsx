@@ -11,11 +11,28 @@ const bookTone: Record<Book, string> = {
 
 type FilterBook = Book | "all";
 type FilterRegion = string | "all";
+const PAGE_SIZE = 24;
 
 export function CompanyDirectory({ companies }: { companies: Company[] }) {
   const [book, setBook] = useState<FilterBook>("all");
   const [region, setRegion] = useState<FilterRegion>("all");
   const [query, setQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const updateBook = (value: FilterBook) => {
+    setBook(value);
+    setVisibleCount(PAGE_SIZE);
+  };
+
+  const updateRegion = (value: FilterRegion) => {
+    setRegion(value);
+    setVisibleCount(PAGE_SIZE);
+  };
+
+  const updateQuery = (value: string) => {
+    setQuery(value);
+    setVisibleCount(PAGE_SIZE);
+  };
 
   const regions = useMemo(() => {
     return Array.from(new Set(companies.map((company) => company.region || "北京"))).sort();
@@ -64,7 +81,7 @@ export function CompanyDirectory({ companies }: { companies: Company[] }) {
             type="search"
             placeholder="搜索地区、企业、商标、注册号或商品服务"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => updateQuery(event.target.value)}
           />
         </div>
       </div>
@@ -72,11 +89,11 @@ export function CompanyDirectory({ companies }: { companies: Company[] }) {
       <div className="filter-group" aria-label="地区筛选">
         <span>地区</span>
         <div className="filter-row">
-          <button className={`filter ${region === "all" ? "active" : ""}`} onClick={() => setRegion("all")} type="button">
+          <button className={`filter ${region === "all" ? "active" : ""}`} onClick={() => updateRegion("all")} type="button">
             全部
           </button>
           {regions.map((item) => (
-            <button className={`filter ${region === item ? "active" : ""}`} key={item} onClick={() => setRegion(item)} type="button">
+            <button className={`filter ${region === item ? "active" : ""}`} key={item} onClick={() => updateRegion(item)} type="button">
               {item}
             </button>
           ))}
@@ -96,7 +113,7 @@ export function CompanyDirectory({ companies }: { companies: Company[] }) {
               className={`filter ${book === value ? "active" : ""}`}
               data-book={value}
               key={value}
-              onClick={() => setBook(value as FilterBook)}
+              onClick={() => updateBook(value as FilterBook)}
               type="button"
             >
               {label}
@@ -106,12 +123,14 @@ export function CompanyDirectory({ companies }: { companies: Company[] }) {
       </div>
 
       <div className="result-meta">
-        当前展示 {filteredCompanies.length} 个企业主体，共 {companies.length} 个主体。
+        当前显示 {Math.min(visibleCount, filteredCompanies.length)} 个，筛选结果 {filteredCompanies.length} 个，共 {companies.length} 个主体。
       </div>
 
       <div className="company-grid">
         {filteredCompanies.length ? (
-          filteredCompanies.slice(0, 80).map((company) => <CompanyCard company={company} key={`${company.region || "北京"}-${company.name}`} />)
+          filteredCompanies
+            .slice(0, visibleCount)
+            .map((company) => <CompanyCard company={company} key={`${company.region || "北京"}-${company.name}`} />)
         ) : (
           <article className="company-card">
             <h3>未找到匹配结果</h3>
@@ -119,6 +138,14 @@ export function CompanyDirectory({ companies }: { companies: Company[] }) {
           </article>
         )}
       </div>
+      {visibleCount < filteredCompanies.length ? (
+        <div className="load-more-wrap">
+          <button className="button load-more" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)} type="button">
+            加载更多
+            <span>（剩余 {filteredCompanies.length - visibleCount} 个）</span>
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
