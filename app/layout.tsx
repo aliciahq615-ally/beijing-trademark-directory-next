@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "北京重点商标保护名录 | 品牌资产展示",
-  description: "展示北京重点商标保护名录中的企业定位、代表产品与品牌资产结构。",
+  title: "全国重点商标保护名录 | 品牌资产展示",
+  description: "汇集北京、上海等地区重点商标保护名录，展示企业主体、代表商标、注册号与核心商品服务。",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

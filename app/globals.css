@@ -503,6 +503,26 @@ input[type="search"]:focus {
   gap: 14px;
 }
 
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.load-more {
+  min-width: 220px;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  background: var(--white);
+  cursor: pointer;
+}
+
+.load-more span {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .company-card {
   min-height: 360px;
   padding: 20px;
@@ -642,7 +662,7 @@ input[type="search"]:focus {
   }
 
   .hero {
-    min-height: 820px;
+    min-height: 720px;
     grid-template-columns: 1fr;
     align-items: end;
   }
@@ -659,6 +679,14 @@ input[type="search"]:focus {
     transform: rotate(-8deg) scale(1.18);
   }
 
+  .logo-track.reverse {
+    display: none;
+  }
+
+  .logo-track {
+    animation-duration: 80s;
+  }
+
   .logo-chip {
     width: 170px;
     height: 64px;
@@ -666,6 +694,14 @@ input[type="search"]:focus {
 
   .logo-chip b {
     font-size: 15px;
+  }
+
+  .company-card {
+    min-height: 0;
+  }
+
+  .page-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hero-panel,
@@ -703,6 +739,13 @@ input[type="search"]:focus {
 
   .site-footer {
     flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-track,
+  .logo-track.reverse {
+    animation: none;
   }
 }
 
@@ -857,6 +900,30 @@ button.primary {
   gap: 8px;
   max-height: calc(100vh - 210px);
   overflow: auto;
+}
+
+.admin-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.admin-filter-row button {
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.admin-filter-row button.active {
+  color: #fff;
+  border-color: #183344;
+  background: #183344;
+}
+
+.list-count {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .company-item {
