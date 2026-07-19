@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { GalaxyParticleField } from "@/components/GalaxyParticleField";
 import type { CatalogStats, Company } from "@/types/catalog";
 
 type Region = "北京" | "上海";
@@ -55,6 +56,7 @@ export function GalaxyDirectory({ companies, stats }: { companies: Company[]; st
   return (
     <main className="galaxy-home">
       <div className="space-noise" aria-hidden="true" />
+      <GalaxyParticleField />
       <header className="galaxy-header">
         <Link className="galaxy-brand" href="/" aria-label="返回星系首页">
           <span className="brand-orbit" aria-hidden="true"><i /></span>
@@ -120,6 +122,7 @@ export function GalaxyDirectory({ companies, stats }: { companies: Company[]; st
                       "--planet-y": `${position.y}%`,
                       "--planet-size": `${position.size}px`,
                       "--planet-delay": `${-(index % 19) * 0.7}s`,
+                      "--planet-enter": `${0.75 + index * 0.003}s`,
                       "--planet-hue": `${region === "北京" ? 210 + (index % 35) : 266 + (index % 32)}`,
                     } as React.CSSProperties}
                   >

@@ -789,6 +789,17 @@ input[type="search"]:focus {
   mask-image: radial-gradient(ellipse, #000 15%, transparent 88%);
 }
 
+.galaxy-particle-field {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  animation: field-reveal 2.2s .2s ease-out forwards;
+}
+
 .galaxy-header {
   position: relative;
   z-index: 40;
@@ -873,6 +884,7 @@ input[type="search"]:focus {
   text-align: center;
   transform: translateX(-50%);
   pointer-events: none;
+  animation: intro-arrive 1.4s .25s cubic-bezier(.2,.75,.2,1) both;
 }
 .galaxy-intro p { margin: 0 0 7px; color: #7786ae; font-size: 9px; letter-spacing: .34em; }
 .galaxy-intro h1 { margin: 0; font-size: clamp(26px, 2.2vw, 40px); font-weight: 500; letter-spacing: .28em; text-indent: .28em; text-shadow: 0 0 30px rgba(129,159,255,.3); }
@@ -883,7 +895,9 @@ input[type="search"]:focus {
   inset: 174px 44px 58px;
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, .82fr);
+  z-index: 3;
   gap: clamp(36px, 4.5vw, 92px);
+  perspective: 1200px;
 }
 
 .galaxy-cluster {
@@ -891,7 +905,15 @@ input[type="search"]:focus {
   min-width: 0;
   min-height: 0;
   filter: saturate(118%);
+  transform: scale(.94);
+  opacity: 0;
+  animation: cluster-arrive 1.8s .45s cubic-bezier(.18,.82,.2,1) forwards;
+  transition: transform .8s cubic-bezier(.2,.75,.2,1), filter .8s ease, opacity .8s ease;
 }
+
+.galaxy-shanghai { animation-delay: .65s; }
+.galaxies-stage:has(.galaxy-cluster:hover) .galaxy-cluster:not(:hover) { opacity: .62; filter: saturate(75%) blur(.35px); transform: scale(.965); }
+.galaxy-cluster:hover { transform: scale(1.025); filter: saturate(138%) brightness(1.08); }
 
 .galaxy-cluster::before,
 .galaxy-cluster::after {
@@ -902,7 +924,7 @@ input[type="search"]:focus {
 }
 .galaxy-cluster::before { inset: 5% 2%; background: repeating-conic-gradient(from 10deg, transparent 0 8deg, rgba(100,130,255,.025) 9deg 10deg); filter: blur(2px); animation: galaxy-spin 100s linear infinite; }
 .galaxy-cluster::after { inset: 18% 11%; border: 1px solid rgba(113,145,255,.08); box-shadow: 0 0 80px rgba(37,64,255,.12); }
-.nebula { position: absolute; inset: 7% 0; border-radius: 50%; opacity: .92; filter: blur(14px); transform: rotate(-11deg); }
+.nebula { position: absolute; inset: 7% 0; border-radius: 50%; opacity: .82; filter: blur(14px); transform: rotate(-11deg); animation: nebula-breathe 12s ease-in-out infinite; }
 .galaxy-beijing .nebula { background: radial-gradient(ellipse, rgba(47,134,255,.35) 0 7%, rgba(23,72,202,.28) 8% 20%, rgba(111,51,229,.2) 28%, rgba(22,80,157,.08) 48%, transparent 69%); box-shadow: inset 90px 10px 90px rgba(152,72,255,.12), 0 0 90px rgba(25,85,235,.12); }
 .galaxy-shanghai .nebula { background: radial-gradient(ellipse, rgba(170,86,255,.32) 0 7%, rgba(91,45,205,.25) 10% 22%, rgba(36,108,230,.17) 33%, rgba(119,39,171,.07) 50%, transparent 70%); box-shadow: inset -50px 30px 80px rgba(45,140,255,.14), 0 0 80px rgba(127,40,215,.13); }
 
@@ -931,6 +953,7 @@ input[type="search"]:focus {
   transform: translate(-50%, -50%);
   outline: none;
   transition: opacity .35s ease, filter .35s ease;
+  animation: planet-arrive .9s var(--planet-enter) ease-out both;
 }
 .planet-sphere { position: absolute; top: 50%; left: 50%; width: var(--planet-size); height: var(--planet-size); border: 1px solid hsla(var(--planet-hue), 90%, 78%, .72); border-radius: 50%; background: radial-gradient(circle at 32% 28%, #fff 0 7%, hsla(var(--planet-hue), 88%, 68%, .95) 18%, hsla(var(--planet-hue), 72%, 35%, .9) 55%, rgba(2,4,16,.95) 80%); box-shadow: 0 0 5px hsla(var(--planet-hue), 100%, 66%, .52); transform: translate(-50%, -50%); animation: planet-breathe 8s ease-in-out var(--planet-delay) infinite; transition: width .22s ease, height .22s ease, box-shadow .22s ease, filter .22s ease; }
 .planet-sphere::after { content: ""; position: absolute; top: 50%; left: 50%; width: 150%; height: 50%; border: 1px solid hsla(var(--planet-hue), 95%, 77%, .38); border-radius: 50%; transform: translate(-50%, -50%) rotate(-21deg); }
@@ -939,6 +962,7 @@ input[type="search"]:focus {
 .planet-label small { overflow: hidden; color: #9faac6; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .company-planet:hover, .company-planet:focus-visible { z-index: 30; }
 .company-planet:hover .planet-sphere, .company-planet:focus-visible .planet-sphere, .company-planet.search-match .planet-sphere { width: calc(var(--planet-size) + 8px); height: calc(var(--planet-size) + 8px); filter: brightness(1.6); box-shadow: 0 0 7px #fff, 0 0 18px hsla(var(--planet-hue), 100%, 68%, .95), 0 0 42px hsla(var(--planet-hue), 100%, 58%, .72); }
+.company-planet:hover::before, .company-planet:focus-visible::before { content: ""; position: absolute; inset: -15px; border: 1px solid hsla(var(--planet-hue), 95%, 75%, .28); border-radius: 50%; animation: scan-ring 1.8s ease-out infinite; }
 .company-planet:hover .planet-label, .company-planet:focus-visible .planet-label { opacity: 1; transform: translate(-50%, 0); }
 .company-planet.search-match { z-index: 10; }
 .company-planet.search-dim { opacity: .08; filter: grayscale(1); }
@@ -949,6 +973,12 @@ input[type="search"]:focus {
 @keyframes galaxy-spin { to { transform: rotate(360deg); } }
 @keyframes core-pulse { 50% { filter: brightness(1.3); transform: scale(1.08); } }
 @keyframes planet-breathe { 50% { filter: brightness(1.22); transform: translate(-50%, -50%) rotate(180deg) scale(1.08); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes field-reveal { to { opacity: .9; } }
+@keyframes intro-arrive { from { opacity: 0; filter: blur(12px); transform: translate(-50%, 18px) scale(.96); } to { opacity: 1; filter: blur(0); transform: translate(-50%, 0) scale(1); } }
+@keyframes cluster-arrive { from { opacity: 0; filter: blur(14px) saturate(70%); transform: scale(.72) rotateX(8deg); } to { opacity: 1; filter: blur(0) saturate(118%); transform: scale(1) rotateX(0); } }
+@keyframes planet-arrive { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nebula-breathe { 50% { opacity: 1; filter: blur(10px) brightness(1.18); transform: rotate(-7deg) scale(1.035); } }
+@keyframes scan-ring { from { opacity: .8; transform: scale(.55); } to { opacity: 0; transform: scale(1.45); } }
 
 /* Company detail */
 .company-detail-page { position: relative; min-height: 100vh; overflow: hidden; color: #f7f8ff; background: radial-gradient(circle at 80% 15%, rgba(77,51,180,.2), transparent 27%), radial-gradient(circle at 15% 70%, rgba(27,90,183,.16), transparent 30%), #03040c; isolation: isolate; }
@@ -985,7 +1015,12 @@ input[type="search"]:focus {
   .galaxy-cluster::before,
   .galaxy-core span,
   .planet-sphere,
-  .detail-planet span { animation: none; }
+  .detail-planet span,
+  .galaxy-particle-field,
+  .galaxy-intro,
+  .galaxy-cluster,
+  .nebula,
+  .company-planet { animation: none; opacity: 1; }
 }
 
 
