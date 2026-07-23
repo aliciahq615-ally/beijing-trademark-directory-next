@@ -30,14 +30,18 @@ function searchableText(company: Company) {
     .toLowerCase();
 }
 
-function planetPosition(index: number, total: number, region: Region) {
-  const goldenAngle = 137.508;
+function planetOrbit(index: number, total: number, region: Region) {
   const progress = Math.sqrt((index + 1.8) / (total + 2));
-  const angle = (index * goldenAngle + progress * 150 + (region === "上海" ? 29 : 0)) * (Math.PI / 180);
-  const x = 50 + Math.cos(angle) * 45 * progress;
-  const y = 50 + Math.sin(angle) * 39 * progress;
-  const size = 5 + ((index * 17 + (region === "上海" ? 7 : 0)) % 8);
-  return { x, y, size };
+  const duration = 92 + (index % 13) * 4.6 + progress * 36;
+  const phase = ((index * 137.508 + progress * 150 + (region === "上海" ? 29 : 0)) % 360) / 360;
+  const radius = 2.6 + progress * (region === "北京" ? 25.2 : 17.2);
+  return {
+    duration,
+    delay: -(phase * duration),
+    radius,
+    reverse: index % 7 === 0,
+    size: 4 + (index % 3 === 0 ? 0.7 : 0),
+  };
 }
 
 export function GalaxyDirectory({ companies, stats }: { companies: Company[]; stats: CatalogStats }) {
@@ -109,26 +113,33 @@ export function GalaxyDirectory({ companies, stats }: { companies: Company[]; st
                 <p>{regionCompanies.length} 家重点企业</p>
               </div>
               {regionCompanies.map((company, index) => {
-                const position = planetPosition(index, regionCompanies.length, region);
+                const orbit = planetOrbit(index, regionCompanies.length, region);
                 const isMatch = matchIds.has(company.catalogIndex);
                 return (
-                  <Link
-                    aria-label={`${company.name}，查看企业详情`}
-                    className={`company-planet ${normalizedQuery ? (isMatch ? "search-match" : "search-dim") : ""}`}
-                    href={`/company/${company.catalogIndex}`}
+                  <span
+                    className={`planet-orbit-track ${orbit.reverse ? "orbit-reverse" : ""}`}
                     key={company.catalogIndex}
                     style={{
-                      "--planet-x": `${position.x}%`,
-                      "--planet-y": `${position.y}%`,
-                      "--planet-size": `${position.size}px`,
+                      "--orbit-radius": `${orbit.radius}vw`,
+                      "--orbit-duration": `${orbit.duration}s`,
+                      "--orbit-delay": `${orbit.delay}s`,
+                      "--planet-size": `${orbit.size}px`,
                       "--planet-delay": `${-(index % 19) * 0.7}s`,
                       "--planet-enter": `${0.75 + index * 0.003}s`,
                       "--planet-hue": `${region === "北京" ? 210 + (index % 35) : 266 + (index % 32)}`,
                     } as React.CSSProperties}
                   >
-                    <span className="planet-sphere" />
-                    <span className="planet-label"><b>{company.name}</b><small>{company.representativeMarks[0] || company.positioning}</small></span>
-                  </Link>
+                    <Link
+                      aria-label={`${company.name}，查看企业详情`}
+                      className={`company-planet ${normalizedQuery ? (isMatch ? "search-match" : "search-dim") : ""}`}
+                      href={`/company/${company.catalogIndex}`}
+                    >
+                      <span className="planet-visual">
+                        <span className="planet-sphere" />
+                        <span className="planet-label"><b>{company.name}</b><small>{company.representativeMarks[0] || company.positioning}</small></span>
+                      </span>
+                    </Link>
+                  </span>
                 );
               })}
             </section>
