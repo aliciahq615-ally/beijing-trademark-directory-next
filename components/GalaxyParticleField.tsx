@@ -13,13 +13,32 @@ type Particle = {
   hue: number;
 };
 
+type GalaxyView = {
+  x: number;
+  y: number;
+  scale: number;
+  opacity: number;
+};
+
 function seededRandom(seed: number) {
   const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
   return value - Math.floor(value);
 }
 
-export function GalaxyParticleField() {
+function targetView(galaxy: number, activeGalaxy: number): GalaxyView {
+  const offset = (galaxy - activeGalaxy + 3) % 3;
+  if (offset === 0) return { x: 0.5, y: 0.61, scale: 1, opacity: 1 };
+  if (offset === 1) return { x: 0.92, y: 0.61, scale: 0.46, opacity: 0.36 };
+  return { x: 0.08, y: 0.61, scale: 0.46, opacity: 0.36 };
+}
+
+export function GalaxyParticleField({ activeGalaxy }: { activeGalaxy: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const activeGalaxyRef = useRef(activeGalaxy);
+
+  useEffect(() => {
+    activeGalaxyRef.current = activeGalaxy;
+  }, [activeGalaxy]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -47,6 +66,7 @@ export function GalaxyParticleField() {
     let frame = 0;
     let animationId = 0;
     let lastTime = performance.now();
+    const galaxyViews: GalaxyView[] = [0, 1, 2].map((galaxy) => targetView(galaxy, activeGalaxyRef.current));
     const pointer = { x: -1000, y: -1000, tx: -1000, ty: -1000 };
     const camera = { x: 0, y: 0, tx: 0, ty: 0 };
 
@@ -86,19 +106,26 @@ export function GalaxyParticleField() {
       context.clearRect(0, 0, width, height);
       context.globalCompositeOperation = "lighter";
 
+      galaxyViews.forEach((view, galaxy) => {
+        const target = targetView(galaxy, activeGalaxyRef.current);
+        view.x += (target.x - view.x) * 0.035;
+        view.y += (target.y - view.y) * 0.035;
+        view.scale += (target.scale - view.scale) * 0.035;
+        view.opacity += (target.opacity - view.opacity) * 0.035;
+      });
+
       for (const particle of particles) {
-        const systemAngle = -Math.PI / 2 + (frame / 180000) * Math.PI * 2 + particle.galaxy * (Math.PI * 2 / 3);
-        const stageHeight = Math.max(420, height - 215);
-        const centerX = width * (0.5 + Math.cos(systemAngle) * 0.27) + camera.x * (0.5 + particle.depth);
-        const centerY = 160 + stageHeight * (0.515 + Math.sin(systemAngle) * 0.215) + camera.y * (0.5 + particle.depth);
-        const maxRadiusX = width * 0.148;
-        const maxRadiusY = height * 0.205;
+        const view = galaxyViews[particle.galaxy];
+        const centerX = width * view.x + camera.x * (0.45 + particle.depth) * view.scale;
+        const centerY = height * view.y + camera.y * (0.45 + particle.depth) * view.scale;
+        const maxRadiusX = width * 0.25 * view.scale;
+        const maxRadiusY = height * 0.285 * view.scale;
         const spiral = particle.angle + frame * particle.speed + particle.radius * 4.2;
-        const breath = 1 + Math.sin(frame * 0.00023 + particle.phase) * 0.035;
-        const wave = Math.sin(spiral * 2.7 + particle.phase) * 0.11;
+        const breath = 1 + Math.sin(frame * 0.00017 + particle.phase) * 0.025;
+        const wave = Math.sin(spiral * 2.7 + particle.phase) * 0.085;
         let x = centerX + Math.cos(spiral) * maxRadiusX * particle.radius * breath;
         let y = centerY + Math.sin(spiral) * maxRadiusY * particle.radius * (0.52 + particle.depth * 0.34) + wave * maxRadiusY;
-        x += Math.sin(frame * 0.00012 + particle.phase) * 7 * particle.depth;
+        x += Math.sin(frame * 0.0001 + particle.phase) * 5 * particle.depth * view.scale;
 
         const dx = x - pointer.x;
         const dy = y - pointer.y;
@@ -110,18 +137,18 @@ export function GalaxyParticleField() {
         }
 
         const coreGlow = Math.max(0, 1 - particle.radius) * 0.48;
-        const alpha = 0.1 + particle.depth * 0.42 + coreGlow + influence * 0.48;
-        const size = particle.size * (0.65 + particle.depth * 0.75) + influence * 1.5;
+        const alpha = (0.07 + particle.depth * 0.34 + coreGlow + influence * 0.32) * view.opacity;
+        const size = (particle.size * (0.6 + particle.depth * 0.68) + influence * 1.1) * Math.max(view.scale, 0.58);
         context.beginPath();
         context.arc(x, y, size, 0, Math.PI * 2);
-        context.fillStyle = `hsla(${particle.hue}, 92%, ${61 + particle.depth * 22}%, ${Math.min(alpha, 0.92)})`;
+        context.fillStyle = `hsla(${particle.hue}, 48%, ${66 + particle.depth * 18}%, ${Math.min(alpha, 0.78)})`;
         context.fill();
 
         if (influence > 0.38) {
           context.beginPath();
           context.moveTo(x, y);
           context.lineTo(x - dx * 0.055, y - dy * 0.055);
-          context.strokeStyle = `hsla(${particle.hue}, 100%, 78%, ${influence * 0.24})`;
+          context.strokeStyle = `hsla(${particle.hue}, 58%, 78%, ${influence * 0.17 * view.opacity})`;
           context.lineWidth = 0.5;
           context.stroke();
         }

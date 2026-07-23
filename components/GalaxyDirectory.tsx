@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GalaxyParticleField } from "@/components/GalaxyParticleField";
 import type { CatalogStats, Company } from "@/types/catalog";
 
@@ -15,6 +15,12 @@ const REGION_META: Record<Region, { code: string; constellation: string; hue: nu
 };
 
 const REGIONS: Region[] = ["北京", "上海", "广东"];
+
+function galaxySlot(index: number, activeIndex: number) {
+  const offset = (index - activeIndex + REGIONS.length) % REGIONS.length;
+  if (offset === 0) return "center";
+  return offset === 1 ? "right" : "left";
+}
 
 function searchableText(company: Company) {
   return [
@@ -53,6 +59,7 @@ function planetOrbit(index: number, total: number, region: Region) {
 
 export function GalaxyDirectory({ companies, stats }: { companies: Company[]; stats: CatalogStats }) {
   const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
   const indexedCompanies = useMemo<IndexedCompany[]>(
     () => companies.map((company, catalogIndex) => ({ ...company, catalogIndex })),
     [companies],
@@ -63,11 +70,24 @@ export function GalaxyDirectory({ companies, stats }: { companies: Company[]; st
     [indexedCompanies, normalizedQuery],
   );
   const matchIds = useMemo(() => new Set(matches.map((company) => company.catalogIndex)), [matches]);
+  const previousIndex = (activeIndex - 1 + REGIONS.length) % REGIONS.length;
+  const nextIndex = (activeIndex + 1) % REGIONS.length;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement) return;
+      if (event.key === "ArrowLeft") setActiveIndex((current) => (current - 1 + REGIONS.length) % REGIONS.length);
+      if (event.key === "ArrowRight") setActiveIndex((current) => (current + 1) % REGIONS.length);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   return (
-    <main className="galaxy-home">
+    <main className="galaxy-home" data-active-galaxy={REGION_META[REGIONS[activeIndex]].code}>
       <div className="space-noise" aria-hidden="true" />
-      <GalaxyParticleField />
+      <div className="cinema-grain" aria-hidden="true" />
+      <GalaxyParticleField activeGalaxy={activeIndex} />
       <header className="galaxy-header">
         <Link className="galaxy-brand" href="/" aria-label="返回星系首页">
           <span className="brand-orbit" aria-hidden="true"><i /></span>
@@ -102,17 +122,38 @@ export function GalaxyDirectory({ companies, stats }: { companies: Company[]; st
       <section className="galaxy-intro">
         <p>CHINA · PROTECTED TRADEMARK ATLAS</p>
         <h1>品牌星系</h1>
-        <span>探索北京、上海与广东的重点商标企业</span>
+        <span>探索北京、上海与广东的重点商标企业 · 使用左右方向键切换</span>
       </section>
+
+      <nav className="galaxy-pagination" aria-label="切换地区星系">
+        <button
+          className="galaxy-page-button galaxy-page-previous"
+          onClick={() => setActiveIndex(previousIndex)}
+          type="button"
+        >
+          <i aria-hidden="true" />
+          <span><small>PREVIOUS</small><b>{REGIONS[previousIndex]}星系</b></span>
+        </button>
+        <button
+          className="galaxy-page-button galaxy-page-next"
+          onClick={() => setActiveIndex(nextIndex)}
+          type="button"
+        >
+          <span><small>NEXT</small><b>{REGIONS[nextIndex]}星系</b></span>
+          <i aria-hidden="true" />
+        </button>
+      </nav>
 
       <div className="galaxies-stage">
         {REGIONS.map((region, regionIndex) => {
           const regionCompanies = indexedCompanies.filter((company) => (company.region || "北京") === region);
           const meta = REGION_META[region];
+          const slot = galaxySlot(regionIndex, activeIndex);
           return (
             <div
-              className={`galaxy-cluster-orbit system-phase-${regionIndex}`}
+              className={`galaxy-cluster-frame galaxy-slot-${slot} ${slot === "center" ? "galaxy-is-active" : ""}`}
               key={region}
+              aria-hidden={slot !== "center"}
             >
               <section className={`galaxy-cluster galaxy-${meta.code}`}>
                 <div className="nebula" aria-hidden="true" />
@@ -145,6 +186,7 @@ export function GalaxyDirectory({ companies, stats }: { companies: Company[]; st
                         aria-label={`${company.name}，查看企业详情`}
                         className={`company-planet ${normalizedQuery ? (isMatch ? "search-match" : "search-dim") : ""}`}
                         href={`/company/${company.catalogIndex}`}
+                        tabIndex={slot === "center" ? 0 : -1}
                       >
                         <span className="planet-visual">
                           <span className="planet-sphere" />
@@ -158,6 +200,21 @@ export function GalaxyDirectory({ companies, stats }: { companies: Company[]; st
             </div>
           );
         })}
+      </div>
+
+      <div className="galaxy-position-indicator" aria-label={`当前显示${REGIONS[activeIndex]}星系`}>
+        {REGIONS.map((region, index) => (
+          <button
+            aria-label={`显示${region}星系`}
+            className={index === activeIndex ? "is-current" : ""}
+            key={region}
+            onClick={() => setActiveIndex(index)}
+            type="button"
+          >
+            <i />
+            <span>{region}</span>
+          </button>
+        ))}
       </div>
 
       <details className="catalog-downloads">
