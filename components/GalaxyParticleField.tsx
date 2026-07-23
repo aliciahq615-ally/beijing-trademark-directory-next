@@ -27,9 +27,9 @@ function seededRandom(seed: number) {
 
 function targetView(galaxy: number, activeGalaxy: number): GalaxyView {
   const offset = (galaxy - activeGalaxy + 3) % 3;
-  if (offset === 0) return { x: 0.5, y: 0.61, scale: 1, opacity: 1 };
-  if (offset === 1) return { x: 0.92, y: 0.61, scale: 0.46, opacity: 0.36 };
-  return { x: 0.08, y: 0.61, scale: 0.46, opacity: 0.36 };
+  if (offset === 0) return { x: 0.5, y: 0.61, scale: 1.14, opacity: 1 };
+  if (offset === 1) return { x: 0.94, y: 0.61, scale: 0.43, opacity: 0.3 };
+  return { x: 0.06, y: 0.61, scale: 0.43, opacity: 0.3 };
 }
 
 export function GalaxyParticleField({ activeGalaxy }: { activeGalaxy: number }) {
@@ -118,13 +118,20 @@ export function GalaxyParticleField({ activeGalaxy }: { activeGalaxy: number }) 
         const view = galaxyViews[particle.galaxy];
         const centerX = width * view.x + camera.x * (0.45 + particle.depth) * view.scale;
         const centerY = height * view.y + camera.y * (0.45 + particle.depth) * view.scale;
-        const maxRadiusX = width * 0.25 * view.scale;
-        const maxRadiusY = height * 0.285 * view.scale;
+        const maxRadiusX = width * 0.285 * view.scale;
+        const maxRadiusY = height * 0.315 * view.scale;
         const spiral = particle.angle + frame * particle.speed + particle.radius * 4.2;
         const breath = 1 + Math.sin(frame * 0.00017 + particle.phase) * 0.025;
-        const wave = Math.sin(spiral * 2.7 + particle.phase) * 0.085;
-        let x = centerX + Math.cos(spiral) * maxRadiusX * particle.radius * breath;
-        let y = centerY + Math.sin(spiral) * maxRadiusY * particle.radius * (0.52 + particle.depth * 0.34) + wave * maxRadiusY;
+        const irregularEdge =
+          1 +
+          Math.sin(spiral * 3 + particle.phase) * (0.035 + particle.radius * 0.075) +
+          Math.sin(spiral * 5 - particle.phase * 0.7) * particle.radius * 0.035;
+        const wave = Math.sin(spiral * 2.55 + particle.phase) * (0.055 + particle.radius * 0.05);
+        let x = centerX + Math.cos(spiral) * maxRadiusX * particle.radius * breath * irregularEdge;
+        let y =
+          centerY +
+          Math.sin(spiral) * maxRadiusY * particle.radius * (0.49 + particle.depth * 0.35) * irregularEdge +
+          wave * maxRadiusY;
         x += Math.sin(frame * 0.0001 + particle.phase) * 5 * particle.depth * view.scale;
 
         const dx = x - pointer.x;

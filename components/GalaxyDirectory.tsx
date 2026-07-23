@@ -43,16 +43,27 @@ function searchableText(company: Company) {
 }
 
 function planetOrbit(index: number, total: number, region: Region) {
-  const progress = Math.sqrt((index + 1.8) / (total + 2));
-  const duration = 96 + (index % 13) * 4.6 + progress * 38;
+  const progress = Math.pow((index + 2.4) / (total + 3), 0.46);
   const phaseShift = region === "北京" ? 0 : region === "上海" ? 29 : 61;
   const phase = ((index * 137.508 + progress * 150 + phaseShift) % 360) / 360;
-  const radius = 2.1 + progress * 13.2;
+  const wave = Math.sin((index + phaseShift) * 1.73) * 0.72 + Math.sin(index * 0.47 + phaseShift) * 0.38;
+  const radius = 3.4 + progress * 20.8 + wave;
+  const flatten = 0.55 + ((index * 17 + phaseShift) % 19) / 100;
+  const wobble = 0.035 + ((index * 11 + phaseShift) % 7) / 100;
+  const driftX = 0.12 + ((index * 13 + phaseShift) % 11) / 27;
+  const driftY = 0.08 + ((index * 7 + phaseShift) % 9) / 32;
+  const tilt = -24 + ((index * 23 + phaseShift) % 49);
+  const duration = 116 + (index % 17) * 5.1 + progress * 46;
   return {
     duration,
     delay: -(phase * duration),
     radius,
-    reverse: index % 7 === 0,
+    flatten,
+    inverseFlatten: 1 / flatten,
+    wobble,
+    driftX,
+    driftY,
+    tilt,
     size: 3.8 + (index % 3 === 0 ? 0.55 : 0),
   };
 }
@@ -170,12 +181,35 @@ export function GalaxyDirectory({ companies, stats }: { companies: Company[]; st
                   const isMatch = matchIds.has(company.catalogIndex);
                   return (
                     <span
-                      className={`planet-orbit-track ${orbit.reverse ? "orbit-reverse" : ""}`}
+                      className="planet-orbit-track"
                       key={company.catalogIndex}
                       style={{
                         "--orbit-radius": `${orbit.radius}vw`,
                         "--orbit-duration": `${orbit.duration}s`,
                         "--orbit-delay": `${orbit.delay}s`,
+                        "--orbit-flatness": orbit.flatten,
+                        "--orbit-inverse": orbit.inverseFlatten,
+                        "--orbit-wobble": orbit.wobble,
+                        "--orbit-tilt": `${orbit.tilt}deg`,
+                        "--orbit-angle-64": `${orbit.tilt + 64}deg`,
+                        "--orbit-angle-154": `${orbit.tilt + 154}deg`,
+                        "--orbit-angle-244": `${orbit.tilt + 244}deg`,
+                        "--orbit-angle-306": `${orbit.tilt + 306}deg`,
+                        "--orbit-angle-360": `${orbit.tilt + 360}deg`,
+                        "--orbit-counter-0": `${-orbit.tilt}deg`,
+                        "--orbit-counter-64": `${-(orbit.tilt + 64)}deg`,
+                        "--orbit-counter-154": `${-(orbit.tilt + 154)}deg`,
+                        "--orbit-counter-244": `${-(orbit.tilt + 244)}deg`,
+                        "--orbit-counter-306": `${-(orbit.tilt + 306)}deg`,
+                        "--orbit-counter-360": `${-(orbit.tilt + 360)}deg`,
+                        "--orbit-flatness-plus": orbit.flatten + orbit.wobble,
+                        "--orbit-flatness-minus": orbit.flatten - orbit.wobble * 0.45,
+                        "--orbit-flatness-late-plus": orbit.flatten + orbit.wobble * 0.3,
+                        "--orbit-flatness-late-minus": orbit.flatten - orbit.wobble * 0.22,
+                        "--orbit-drift-x": `${orbit.driftX}vw`,
+                        "--orbit-drift-x-negative": `${-orbit.driftX}vw`,
+                        "--orbit-drift-y": `${orbit.driftY}vh`,
+                        "--orbit-drift-y-negative": `${-orbit.driftY}vh`,
                         "--planet-size": `${orbit.size}px`,
                         "--planet-delay": `${-(index % 19) * 0.7}s`,
                         "--planet-enter": `${0.75 + index * 0.002}s`,
