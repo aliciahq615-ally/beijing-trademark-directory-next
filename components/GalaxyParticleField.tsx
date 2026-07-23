@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 type Particle = {
-  galaxy: 0 | 1;
+  galaxy: 0 | 1 | 2;
   angle: number;
   radius: number;
   depth: number;
@@ -27,8 +27,9 @@ export function GalaxyParticleField() {
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    const particles: Particle[] = Array.from({ length: 1450 }, (_, index) => {
-      const galaxy: 0 | 1 = index % 5 < 3 ? 0 : 1;
+    const particles: Particle[] = Array.from({ length: 1950 }, (_, index) => {
+      const galaxy = (index % 3) as 0 | 1 | 2;
+      const baseHue = galaxy === 0 ? 205 : galaxy === 1 ? 325 : 24;
       return {
         galaxy,
         angle: seededRandom(index + 1) * Math.PI * 2,
@@ -37,7 +38,7 @@ export function GalaxyParticleField() {
         speed: 0.000025 + seededRandom(index + 43) * 0.000055,
         phase: seededRandom(index + 59) * Math.PI * 2,
         size: 0.35 + seededRandom(index + 71) * 1.25,
-        hue: galaxy === 0 ? 205 + seededRandom(index + 83) * 62 : 258 + seededRandom(index + 83) * 52,
+        hue: baseHue + seededRandom(index + 83) * (galaxy === 2 ? 28 : 30),
       };
     });
 
@@ -86,11 +87,12 @@ export function GalaxyParticleField() {
       context.globalCompositeOperation = "lighter";
 
       for (const particle of particles) {
-        const isBeijing = particle.galaxy === 0;
-        const centerX = width * (isBeijing ? 0.335 : 0.75) + camera.x * (0.5 + particle.depth);
-        const centerY = height * 0.59 + camera.y * (0.5 + particle.depth);
-        const maxRadiusX = width * (isBeijing ? 0.28 : 0.205);
-        const maxRadiusY = height * (isBeijing ? 0.32 : 0.29);
+        const systemAngle = -Math.PI / 2 + (frame / 180000) * Math.PI * 2 + particle.galaxy * (Math.PI * 2 / 3);
+        const stageHeight = Math.max(420, height - 215);
+        const centerX = width * (0.5 + Math.cos(systemAngle) * 0.27) + camera.x * (0.5 + particle.depth);
+        const centerY = 160 + stageHeight * (0.515 + Math.sin(systemAngle) * 0.215) + camera.y * (0.5 + particle.depth);
+        const maxRadiusX = width * 0.148;
+        const maxRadiusY = height * 0.205;
         const spiral = particle.angle + frame * particle.speed + particle.radius * 4.2;
         const breath = 1 + Math.sin(frame * 0.00023 + particle.phase) * 0.035;
         const wave = Math.sin(spiral * 2.7 + particle.phase) * 0.11;

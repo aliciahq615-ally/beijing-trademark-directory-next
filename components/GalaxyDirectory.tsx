@@ -5,10 +5,16 @@ import { useMemo, useState } from "react";
 import { GalaxyParticleField } from "@/components/GalaxyParticleField";
 import type { CatalogStats, Company } from "@/types/catalog";
 
-type Region = "北京" | "上海";
+type Region = "北京" | "上海" | "广东";
 type IndexedCompany = Company & { catalogIndex: number };
 
-const REGIONS: Region[] = ["北京", "上海"];
+const REGION_META: Record<Region, { code: string; constellation: string; hue: number }> = {
+  北京: { code: "beijing", constellation: "CAPITAL CONSTELLATION", hue: 210 },
+  上海: { code: "shanghai", constellation: "COASTAL CONSTELLATION", hue: 330 },
+  广东: { code: "guangdong", constellation: "GREATER BAY CONSTELLATION", hue: 28 },
+};
+
+const REGIONS: Region[] = ["北京", "上海", "广东"];
 
 function searchableText(company: Company) {
   return [
@@ -32,15 +38,16 @@ function searchableText(company: Company) {
 
 function planetOrbit(index: number, total: number, region: Region) {
   const progress = Math.sqrt((index + 1.8) / (total + 2));
-  const duration = 92 + (index % 13) * 4.6 + progress * 36;
-  const phase = ((index * 137.508 + progress * 150 + (region === "上海" ? 29 : 0)) % 360) / 360;
-  const radius = 2.6 + progress * (region === "北京" ? 25.2 : 17.2);
+  const duration = 96 + (index % 13) * 4.6 + progress * 38;
+  const phaseShift = region === "北京" ? 0 : region === "上海" ? 29 : 61;
+  const phase = ((index * 137.508 + progress * 150 + phaseShift) % 360) / 360;
+  const radius = 2.1 + progress * 13.2;
   return {
     duration,
     delay: -(phase * duration),
     radius,
     reverse: index % 7 === 0,
-    size: 4 + (index % 3 === 0 ? 0.7 : 0),
+    size: 3.8 + (index % 3 === 0 ? 0.55 : 0),
   };
 }
 
@@ -95,57 +102,75 @@ export function GalaxyDirectory({ companies, stats }: { companies: Company[]; st
       <section className="galaxy-intro">
         <p>CHINA · PROTECTED TRADEMARK ATLAS</p>
         <h1>品牌星系</h1>
-        <span>探索北京与上海的重点商标企业</span>
+        <span>探索北京、上海与广东的重点商标企业</span>
       </section>
 
       <div className="galaxies-stage">
-        {REGIONS.map((region) => {
+        {REGIONS.map((region, regionIndex) => {
           const regionCompanies = indexedCompanies.filter((company) => (company.region || "北京") === region);
+          const meta = REGION_META[region];
           return (
-            <section className={`galaxy-cluster galaxy-${region === "北京" ? "beijing" : "shanghai"}`} key={region}>
-              <div className="nebula" aria-hidden="true" />
-              <div className="orbit orbit-one" aria-hidden="true" />
-              <div className="orbit orbit-two" aria-hidden="true" />
-              <div className="galaxy-core" aria-hidden="true"><span /></div>
-              <div className="galaxy-title">
-                <small>{region === "北京" ? "CAPITAL CONSTELLATION" : "COASTAL CONSTELLATION"}</small>
-                <h2>{region}星系</h2>
-                <p>{regionCompanies.length} 家重点企业</p>
-              </div>
-              {regionCompanies.map((company, index) => {
-                const orbit = planetOrbit(index, regionCompanies.length, region);
-                const isMatch = matchIds.has(company.catalogIndex);
-                return (
-                  <span
-                    className={`planet-orbit-track ${orbit.reverse ? "orbit-reverse" : ""}`}
-                    key={company.catalogIndex}
-                    style={{
-                      "--orbit-radius": `${orbit.radius}vw`,
-                      "--orbit-duration": `${orbit.duration}s`,
-                      "--orbit-delay": `${orbit.delay}s`,
-                      "--planet-size": `${orbit.size}px`,
-                      "--planet-delay": `${-(index % 19) * 0.7}s`,
-                      "--planet-enter": `${0.75 + index * 0.003}s`,
-                      "--planet-hue": `${region === "北京" ? 210 + (index % 35) : 266 + (index % 32)}`,
-                    } as React.CSSProperties}
-                  >
-                    <Link
-                      aria-label={`${company.name}，查看企业详情`}
-                      className={`company-planet ${normalizedQuery ? (isMatch ? "search-match" : "search-dim") : ""}`}
-                      href={`/company/${company.catalogIndex}`}
+            <div
+              className={`galaxy-cluster-orbit system-phase-${regionIndex}`}
+              key={region}
+            >
+              <section className={`galaxy-cluster galaxy-${meta.code}`}>
+                <div className="nebula" aria-hidden="true" />
+                <div className="orbit orbit-one" aria-hidden="true" />
+                <div className="orbit orbit-two" aria-hidden="true" />
+                <div className="galaxy-core" aria-hidden="true"><span /></div>
+                <div className="galaxy-title">
+                  <small>{meta.constellation}</small>
+                  <h2>{region}星系</h2>
+                  <p>{regionCompanies.length} 家重点企业</p>
+                </div>
+                {regionCompanies.map((company, index) => {
+                  const orbit = planetOrbit(index, regionCompanies.length, region);
+                  const isMatch = matchIds.has(company.catalogIndex);
+                  return (
+                    <span
+                      className={`planet-orbit-track ${orbit.reverse ? "orbit-reverse" : ""}`}
+                      key={company.catalogIndex}
+                      style={{
+                        "--orbit-radius": `${orbit.radius}vw`,
+                        "--orbit-duration": `${orbit.duration}s`,
+                        "--orbit-delay": `${orbit.delay}s`,
+                        "--planet-size": `${orbit.size}px`,
+                        "--planet-delay": `${-(index % 19) * 0.7}s`,
+                        "--planet-enter": `${0.75 + index * 0.002}s`,
+                        "--planet-hue": `${meta.hue + (index % 29) - 10}`,
+                      } as React.CSSProperties}
                     >
-                      <span className="planet-visual">
-                        <span className="planet-sphere" />
-                        <span className="planet-label"><b>{company.name}</b><small>{company.representativeMarks[0] || company.positioning}</small></span>
-                      </span>
-                    </Link>
-                  </span>
-                );
-              })}
-            </section>
+                      <Link
+                        aria-label={`${company.name}，查看企业详情`}
+                        className={`company-planet ${normalizedQuery ? (isMatch ? "search-match" : "search-dim") : ""}`}
+                        href={`/company/${company.catalogIndex}`}
+                      >
+                        <span className="planet-visual">
+                          <span className="planet-sphere" />
+                          <span className="planet-label"><b>{company.name}</b><small>{company.representativeMarks[0] || company.positioning}</small></span>
+                        </span>
+                      </Link>
+                    </span>
+                  );
+                })}
+              </section>
+            </div>
           );
         })}
       </div>
+
+      <details className="catalog-downloads">
+        <summary aria-label="下载三地原始PDF名录">
+          <span className="download-icon" aria-hidden="true" />
+          原始PDF名录
+        </summary>
+        <div>
+          <a download="北京市重点商标保护名录.pdf" href="/site-assets/beijing-trademark-directory-2025.pdf"><span>北京名录</span><small>PDF</small></a>
+          <a download="上海市重点商标保护名录.pdf" href="/site-assets/shanghai-trademark-directory-2025.pdf"><span>上海名录</span><small>PDF</small></a>
+          <a download="2025年度广东省重点商标保护名录.pdf" href="/site-assets/guangdong-trademark-directory-2025.pdf"><span>广东名录</span><small>PDF</small></a>
+        </div>
+      </details>
 
       <footer className="galaxy-footer">
         <span><i className="legend-dot" /> 悬停点亮 · 点击探索</span>
